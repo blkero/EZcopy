@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EZCopy Receiver</title>
+    <link rel="stylesheet" href="./src/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>EZCopy Receiver</h1>
+          <p>Desktop Chrome and Edge receiver mock for local iPhone media copy.</p>
+        </div>
+        <span id="supportBadge" class="badge">Checking</span>
+      </header>
+
+      <section id="unsupportedPanel" class="panel error hidden">
+        <h2>Unsupported Browser</h2>
+        <p>EZCopy receiver requires desktop Chrome or Edge with the File System Access API enabled.</p>
+      </section>
+
+      <section id="receiverPanel" class="panel">
+        <div class="summary">
+          <div>
+            <span class="label">Device</span>
+            <strong id="deviceName">-</strong>
+          </div>
+          <div>
+            <span class="label">Files</span>
+            <strong id="fileCount">-</strong>
+          </div>
+          <div>
+            <span class="label">Total Size</span>
+            <strong id="totalSize">-</strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="chooseFolderButton" type="button">Choose Folder and Run Mock Copy</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Type</th>
+              <th>Size</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="fileRows"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EZCopy Local Receiver</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f4f7f6;
+        color: #172026;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      main {
+        width: min(1080px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 40px 0;
+      }
+
+      header {
+        margin-bottom: 20px;
+      }
+
+      h1,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 32px;
+        line-height: 1.1;
+      }
+
+      p {
+        color: #5b6871;
+        margin-top: 8px;
+      }
+
+      .panel {
+        background: #ffffff;
+        border: 1px solid #d8dee4;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      input {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #bdc8cc;
+        border-radius: 8px;
+        padding: 0 12px;
+        font: inherit;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 8px;
+        min-height: 42px;
+        padding: 0 16px;
+        background: #126f74;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      button.secondary {
+        background: #2f3f45;
+      }
+
+      button:disabled {
+        background: #8ba1a3;
+        cursor: wait;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid #d8dee4;
+        padding: 10px 8px;
+        vertical-align: top;
+      }
+
+      th {
+        color: #5b6871;
+        font-size: 13px;
+      }
+
+      .status {
+        font-weight: 700;
+        color: #5b6871;
+      }
+
+      .ok {
+        color: #17663a;
+      }
+
+      .active {
+        color: #1b5ea8;
+      }
+
+      .error {
+        color: #9e2f20;
+      }
+
+      .meta {
+        color: #5b6871;
+        font-size: 13px;
+      }
+
+      @media (max-width: 760px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>EZCopy Local Receiver</h1>
+        <p>Open this page in desktop Chrome or Edge, paste the iPhone EZCopy URL, then choose a local folder.</p>
+      </header>
+
+      <section class="panel">
+        <div class="controls">
+          <input id="sourceUrl" placeholder="http://192.168.x.x:8080" autocomplete="off">
+          <button id="loadButton" class="secondary" type="button">Load Media</button>
+          <button id="copyButton" type="button" disabled>Choose Folder and Copy</button>
+        </div>
+        <p id="message">This page copies over Wi-Fi/LAN from your iPhone. It does not upload to the internet.</p>
+      </section>
+
+      <section class="panel">
+        <strong id="summary">No media loaded</strong>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Type</th>
+              <th>Metadata</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="fileRows"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const sourceUrlInput = document.querySelector("#sourceUrl");
+      const loadButton = document.querySelector("#loadButton");
+      const copyButton = document.querySelector("#copyButton");
+      const message = document.querySelector("#message");
+      const summary = document.querySelector("#summary");
+      const fileRows = document.querySelector("#fileRows");
+
+      let sourceBaseUrl = "";
+      let sourceCode = "";
+      let manifest = null;
+
+      function normalizeSourceUrl(value) {
+        const trimmed = value.trim().replace(/\/+$/, "");
+        if (!trimmed) {
+          throw new Error("Enter the iPhone EZCopy URL first.");
+        }
+
+        const url = new URL(trimmed);
+        if (url.protocol !== "http:") {
+          throw new Error("Use the http:// URL shown in the iPhone app.");
+        }
+
+        sourceCode = (url.searchParams.get("code") || url.searchParams.get("token") || "").toUpperCase();
+        return url.origin;
+      }
+
+      function codeQuery(prefix = "?") {
+        return sourceCode ? `${prefix}code=${encodeURIComponent(sourceCode)}` : "";
+      }
+
+      function setMessage(text, className = "") {
+        message.textContent = text;
+        message.className = className;
+      }
+
+      function formatBytes(bytes) {
+        if (!bytes) return "";
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let value = bytes;
+        let index = 0;
+
+        while (value >= 1024 && index < units.length - 1) {
+          value /= 1024;
+          index += 1;
+        }
+
+        return index === 0 ? value + " B" : value.toFixed(value >= 10 ? 1 : 2) + " " + units[index];
+      }
+
+      function metadataText(file) {
+        const parts = [];
+        if (file.pixelWidth && file.pixelHeight) {
+          parts.push(`${file.pixelWidth}x${file.pixelHeight}`);
+        }
+        if (file.duration) {
+          parts.push(`${Math.round(file.duration)}s`);
+        }
+        if (file.createdAt) {
+          parts.push(new Date(file.createdAt).toLocaleString());
+        }
+        return parts.join(" · ") || file.detailText || "-";
+      }
+
+      function setStatus(index, text, className = "") {
+        const cell = fileRows.children[index]?.querySelector("td:last-child");
+        if (!cell) return;
+        cell.className = "status " + className;
+        cell.textContent = text;
+      }
+
+      function renderManifest() {
+        fileRows.textContent = "";
+        summary.textContent = `${manifest.files.length} selected media file(s) from ${manifest.deviceName || "iPhone"}`;
+
+        for (const file of manifest.files) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${escapeHtml(file.originalName)}</td>
+            <td>${escapeHtml(file.mediaType)}</td>
+            <td class="meta">${escapeHtml(metadataText(file))}</td>
+            <td class="status">Pending</td>
+          `;
+          fileRows.append(row);
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      async function loadManifest() {
+        loadButton.disabled = true;
+        copyButton.disabled = true;
+
+        try {
+          sourceBaseUrl = normalizeSourceUrl(sourceUrlInput.value);
+          const response = await fetch(`${sourceBaseUrl}/manifest.json${codeQuery()}`, { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(`Cannot load manifest: ${response.status}`);
+          }
+
+          manifest = await response.json();
+          renderManifest();
+          copyButton.disabled = !("showDirectoryPicker" in window);
+          setMessage(copyButton.disabled ? "Desktop Chrome or Edge folder access is required." : "Ready. Choose a destination folder to copy.", copyButton.disabled ? "error" : "");
+        } catch (error) {
+          setMessage(error.message || "Failed to load media.", "error");
+        } finally {
+          loadButton.disabled = false;
+        }
+      }
+
+      async function getOrCreateDirectory(parent, name) {
+        return parent.getDirectoryHandle(name, { create: true });
+      }
+
+      async function writeTextFile(directoryHandle, name, content, type = "text/plain") {
+        const fileHandle = await directoryHandle.getFileHandle(name, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(new Blob([content], { type }));
+        await writable.close();
+      }
+
+      async function copyFile(sessionDirectory, file, index) {
+        const parentName = file.mediaType === "photo" ? "Photos" : "Videos";
+        const parent = await getOrCreateDirectory(sessionDirectory, parentName);
+        const fileHandle = await parent.getFileHandle(file.originalName, { create: true });
+        const writable = await fileHandle.createWritable();
+        const response = await fetch(`${sourceBaseUrl}/download?id=${encodeURIComponent(file.id)}${codeQuery("&")}`);
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Download failed: ${file.originalName}`);
+        }
+
+        const total = Number(response.headers.get("Content-Length") || 0);
+        const reader = response.body.getReader();
+        let received = 0;
+        setStatus(index, "Copying", "active");
+
+        while (true) {
+          const result = await reader.read();
+          if (result.done) break;
+          received += result.value.byteLength;
+          await writable.write(result.value);
+          setStatus(index, total ? `Copying ${Math.round((received / total) * 100)}%` : `Copying ${formatBytes(received)}`, "active");
+        }
+
+        await writable.close();
+        setStatus(index, `Copied ${formatBytes(received)}`, "ok");
+      }
+
+      async function runCopy() {
+        if (!manifest) {
+          setMessage("Load media first.", "error");
+          return;
+        }
+
+        copyButton.disabled = true;
+        loadButton.disabled = true;
+
+        try {
+          const destination = await window.showDirectoryPicker({ mode: "readwrite" });
+          const sessionDirectory = await getOrCreateDirectory(destination, manifest.sessionId);
+          await getOrCreateDirectory(sessionDirectory, "Photos");
+          await getOrCreateDirectory(sessionDirectory, "Videos");
+
+          for (let index = 0; index < manifest.files.length; index += 1) {
+            await copyFile(sessionDirectory, manifest.files[index], index);
+          }
+
+          await writeTextFile(sessionDirectory, "EZCopy_Manifest.json", JSON.stringify(manifest, null, 2), "application/json");
+          await writeTextFile(sessionDirectory, "EZCopy_Report.html", document.documentElement.outerHTML, "text/html");
+          setMessage("Copy complete.", "ok");
+          copyButton.textContent = "Copy Complete";
+        } catch (error) {
+          setMessage(error.message || "Copy failed.", "error");
+          copyButton.disabled = false;
+        } finally {
+          loadButton.disabled = false;
+        }
+      }
+
+      loadButton.addEventListener("click", loadManifest);
+      copyButton.addEventListener("click", runCopy);
+
+      if (!window.isSecureContext) {
+        setMessage("Open this local receiver from Chrome as a local file or localhost page so folder access is allowed.", "error");
+      } else if (!("showDirectoryPicker" in window)) {
+        setMessage("Desktop Chrome or Edge is required for folder selection.", "error");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ezcopy.local/schemas/transfer-manifest.schema.json",
+  "title": "EZCopy Transfer Manifest",
+  "type": "object",
+  "required": ["app", "schemaVersion", "sessionId", "deviceName", "createdAt", "files"],
+  "properties": {
+    "app": {
+      "const": "EZCopy"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deviceName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": [
+        "id",
+        "originalName",
+        "relativePath",
+        "mediaType",
+        "mimeType",
+        "size",
+        "createdAt",
+        "sourceMd5"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "originalName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relativePath": {
+          "type": "string",
+          "pattern": "^(Photos|Videos)/[^/].*"
+        },
+        "mediaType": {
+          "enum": ["photo", "video"]
+        },
+        "mimeType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAt": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "sourceMd5": {
+          "type": ["string", "null"],
+          "pattern": "^[a-fA-F0-9]{32}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

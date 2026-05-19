@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EZCopy 内部测试功能介绍</title>
+  <style>
+    :root {
+      --bg: #f4f6f1;
+      --surface: #fff9ea;
+      --surface-2: #eaf2ee;
+      --ink: #041f2d;
+      --muted: #5a6870;
+      --teal: #1c7775;
+      --red: #d13a28;
+      --cream: #ffe8b7;
+      --line: rgba(4, 31, 45, 0.13);
+      --shadow: rgba(4, 31, 45, 0.08);
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 249, 234, 0.9), rgba(244, 246, 241, 0.98) 34%),
+        var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.58;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 42px 24px 72px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 34px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 58px;
+      height: 58px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: var(--cream);
+      font-size: 24px;
+      font-weight: 950;
+      box-shadow: 0 14px 28px var(--shadow);
+      position: relative;
+    }
+
+    .mark::after {
+      content: "";
+      width: 18px;
+      height: 10px;
+      border: 4px solid var(--red);
+      border-top: 0;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-radius: 0 0 18px 18px;
+      position: absolute;
+      bottom: 8px;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.05;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: rgba(28, 119, 117, 0.12);
+      color: var(--teal);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      padding: 34px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: var(--cream);
+      box-shadow: 0 22px 50px var(--shadow);
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: rgba(255, 232, 183, 0.72);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 8vw, 82px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .hero-copy .lead {
+      max-width: 680px;
+      margin: 22px 0 0;
+      color: rgba(255, 232, 183, 0.86);
+      font-size: 19px;
+    }
+
+    .hero-note {
+      margin-top: 30px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 232, 183, 0.18);
+      color: rgba(255, 232, 183, 0.72);
+      font-size: 14px;
+    }
+
+    .hero-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .signal-card,
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 14px 30px var(--shadow);
+    }
+
+    .signal-card {
+      padding: 22px;
+      min-height: 0;
+    }
+
+    .big-number {
+      font-size: 52px;
+      line-height: 0.95;
+      font-weight: 950;
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    .signal-card h2,
+    .card h2,
+    .card h3 {
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .signal-card p,
+    .card p,
+    li {
+      color: var(--muted);
+    }
+
+    .signal-card p {
+      margin: 10px 0 0;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 28px 0;
+    }
+
+    .metric {
+      padding: 18px;
+      min-height: 132px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric .value {
+      margin-top: 8px;
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .metric p {
+      margin: 10px 0 0;
+      font-size: 14px;
+    }
+
+    .section {
+      margin-top: 28px;
+      padding: 26px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.08;
+    }
+
+    .section-header p {
+      margin: 8px 0 0;
+      max-width: 720px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(28, 119, 117, 0.24);
+      background: rgba(28, 119, 117, 0.1);
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature {
+      padding: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .feature b {
+      display: block;
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    .feature p {
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      counter-reset: flow;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      counter-increment: flow;
+    }
+
+    .step::before {
+      content: counter(flow);
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: var(--cream);
+      font-weight: 950;
+      font-size: 20px;
+    }
+
+    .step h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .step p {
+      margin: 0;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      position: relative;
+      padding: 12px 12px 12px 40px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .checklist li::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      position: absolute;
+      top: 18px;
+      left: 16px;
+    }
+
+    .warning {
+      background: #fff1e8;
+      border-color: rgba(209, 58, 40, 0.24);
+    }
+
+    .warning .tag {
+      color: var(--red);
+      background: rgba(209, 58, 40, 0.1);
+      border-color: rgba(209, 58, 40, 0.24);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .scenario {
+      min-height: 210px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .scenario small {
+      color: var(--red);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .scenario h3 {
+      margin-top: 8px;
+      font-size: 20px;
+    }
+
+    .scenario p {
+      margin: 10px 0 0;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 34px;
+      color: rgba(4, 31, 45, 0.42);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(4, 31, 45, 0.08);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+    }
+
+    @media (max-width: 920px) {
+      .hero,
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid,
+      .feature-grid,
+      .scenario-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        padding: 28px 16px 54px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero-copy,
+      .section {
+        padding: 22px;
+      }
+
+      .hero-copy {
+        min-height: 380px;
+      }
+
+      .metric-grid,
+      .feature-grid,
+      .scenario-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-header {
+        flex-direction: column;
+      }
+
+      .step {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="topbar" aria-label="Document">
+      <div class="brand">
+        <div class="mark">EZ</div>
+        <div>
+          <strong>EZCopy</strong>
+          <span>Internal Test Brief</span>
+        </div>
+      </div>
+      <div class="pill">Wi-Fi LAN Only</div>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div>
+          <p class="eyebrow">iPhone media transfer for creators</p>
+          <h1>把素材安安静静地送到电脑上</h1>
+          <p class="lead">拍完素材之后，最烦的往往不是剪辑，而是“怎么把这一堆视频和照片弄到电脑里”。EZCopy 做的事情很简单：让 iPhone 和电脑在同一个 Wi-Fi 下直接传文件。不开云盘，不绕服务器，不走蜂窝流量，素材不出去旅行。</p>
+        </div>
+        <p class="hero-note">内部测试版本重点验证局域网连接、ZIP 下载、访问码安全、元数据报告和大文件体验。请尽量在真实拍摄后的素材场景里测试它。</p>
+      </div>
+
+      <aside class="hero-panel" aria-label="Highlights">
+        <div class="signal-card">
+          <div class="big-number">0</div>
+          <h2>云端中转</h2>
+          <p>媒体文件在 iPhone 和电脑之间通过局域网传输，不主动上传到互联网。</p>
+        </div>
+        <div class="signal-card">
+          <div class="big-number">6</div>
+          <h2>位 Access Code</h2>
+          <p>每次启动接收都会生成新的短码。没有 code，看得到门牌号也进不了门。</p>
+        </div>
+        <div class="signal-card">
+          <div class="big-number">10</div>
+          <h2>分钟会话</h2>
+          <p>测试版默认 10 分钟过期。过期后重新点击 Start Receiver 即可生成新会话。</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metric-grid" aria-label="Compatibility Summary">
+      <div class="metric card">
+        <div class="label">Receiver</div>
+        <div class="value">Chrome / Edge</div>
+        <p>电脑端不装客户端，浏览器打开地址即可。</p>
+      </div>
+      <div class="metric card">
+        <div class="label">Network</div>
+        <div class="value">Same Wi-Fi</div>
+        <p>同一局域网即可，不要求这个 Wi-Fi 能访问互联网。</p>
+      </div>
+      <div class="metric card">
+        <div class="label">Package</div>
+        <div class="value">ZIP</div>
+        <p>下载一个素材包，里面包含媒体、Manifest、报告和可选 MD5。</p>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-header">
+        <div>
+          <h2>它适合什么场景</h2>
+          <p>EZCopy 不是大而全的同步工具，它更像拍摄现场的“素材搬运小推车”：目标明确，路线短，最好别绕路。</p>
+        </div>
+        <span class="tag">Creator Workflow</span>
+      </div>
+      <div class="scenario-grid">
+        <article class="scenario">
+          <div>
+            <small>Scene 01</small>
+            <h3>拍摄结束快速收工</h3>
+            <p>手机里刚拍完一批短视频素材，电脑就在旁边。选择文件，复制链接，电脑下载 ZIP，今天的素材先落袋为安。</p>
+          </div>
+        </article>
+        <article class="scenario">
+          <div>
+            <small>Scene 02</small>
+            <h3>没有外网也能传</h3>
+            <p>外拍现场、临时路由器、工作室内网，只要 iPhone 和电脑在同一局域网，就不必追问“这里网速怎么样”。</p>
+          </div>
+        </article>
+        <article class="scenario">
+          <div>
+            <small>Scene 03</small>
+            <h3>电脑端不想装软件</h3>
+            <p>Chrome 或 Edge 就是接收端。少装一个东西，就少一个“这东西到底干嘛的”的解释环节。</p>
+          </div>
+        </article>
+        <article class="scenario">
+          <div>
+            <small>Scene 04</small>
+            <h3>素材不想经过第三方</h3>
+            <p>不先丢网盘，不先发聊天工具，不先让素材出去逛一圈。文件在你的设备之间传。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-header">
+        <div>
+          <h2>重点功能</h2>
+          <p>这次内部测试请优先感受这些功能是否顺手。尤其是 Address、Access Code、Copy Link 这一区域，它决定了第一次上手有没有挫败感。</p>
+        </div>
+        <span class="tag">Feature Focus</span>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <b>只走局域网</b>
+          <p>核心传输发生在同一 Wi-Fi / 局域网内，不需要云端服务器。</p>
+        </div>
+        <div class="feature">
+          <b>一键复制链接</b>
+          <p>PC 扫码有时像在给显示器做眼保健操。EZCopy 直接复制完整链接，更符合日常使用。</p>
+        </div>
+        <div class="feature">
+          <b>短访问码</b>
+          <p>手动输入只需要基础地址加 6 位 Access Code，安全感保留，痛苦值下降。</p>
+        </div>
+        <div class="feature">
+          <b>自动打包 ZIP</b>
+          <p>照片、视频、Manifest、报告一次打包，电脑端按浏览器下载流程保存。</p>
+        </div>
+        <div class="feature">
+          <b>可选 MD5</b>
+          <p>需要完整性校验就开启；赶时间传大视频时可以关闭，少跑一段认真但有点慢的流程。</p>
+        </div>
+        <div class="feature">
+          <b>缓存可清理</b>
+          <p>临时 ZIP 会在传输后清理，也可以在 App 中手动清理缓存。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-header">
+        <div>
+          <h2>推荐测试流程</h2>
+          <p>请尽量用真实素材测试，比如一组手机拍摄的照片和几段视频。空素材测试会很快，但它不太会暴露真正的问题。</p>
+        </div>
+        <span class="tag">How To Test</span>
+      </div>
+      <div class="flow">
+        <article class="step">
+          <div>
+            <h3>连接同一个 Wi-Fi</h3>
+            <p>iPhone 和电脑需要处于同一局域网。这个 Wi-Fi 是否能上互联网不是核心条件。</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>选择照片和视频</h3>
+            <p>在 EZCopy 中从相册选择要传输的手机拍摄素材。</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>启动 Receiver</h3>
+            <p>点击 <code>Start Receiver</code>，App 会显示 Address、Access Code 和过期时间。</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>打开电脑浏览器</h3>
+            <p>用 Chrome 或 Edge 打开复制的完整链接，或者手动输入 Address 后再输入 Access Code。</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>下载素材包</h3>
+            <p>点击 <code>Download EZCopy Package</code>，等待 ZIP 下载完成。</p>
+          </div>
+        </article>
+        <article class="step">
+          <div>
+            <h3>解压并检查</h3>
+            <p>确认媒体文件、Manifest、报告和可选 MD5 文件是否完整，文件名和基础元数据是否符合预期。</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="two-column">
+      <section class="section card">
+        <div class="section-header">
+          <div>
+            <h2>安全与边界</h2>
+            <p>这里的目标是实用安全：不把素材送上网，同时避免同网段里随便一个人都能进来。</p>
+          </div>
+        </div>
+        <ul class="checklist">
+          <li>传输链路在局域网内完成，不主动上传素材到互联网。</li>
+          <li>媒体文件不使用蜂窝数据传输。</li>
+          <li>每次接收会话都有新的 6 位 Access Code。</li>
+          <li>会话默认 10 分钟过期，过期后需要重新启动 Receiver。</li>
+          <li>Access Code 错误或过期会被拒绝访问。</li>
+          <li>MD5 用于完整性检查，不是加密功能。</li>
+        </ul>
+      </section>
+
+      <section class="section card warning">
+        <div class="section-header">
+          <div>
+            <h2>请注意</h2>
+            <p>“不依赖互联网”这句话基本成立，但有一个重要前提：你要传的原片已经在 iPhone 本机。</p>
+          </div>
+          <span class="tag">Correction</span>
+        </div>
+        <ul class="checklist">
+          <li>如果照片或视频原片只在 iCloud 里，EZCopy 当前不会自动联网下载。</li>
+          <li>需要用户先在相册中把 iCloud 原片下载到本机，再进行传输。</li>
+          <li>当前仅支持 Chrome 和 Edge，不支持 Safari、Firefox。</li>
+          <li>当前基础档采用 ZIP 下载方式，不是直接写入电脑文件夹。</li>
+          <li>大视频打包前，iPhone 需要有足够临时空间。</li>
+          <li>公共 Wi-Fi 环境仍建议谨慎使用，不要把链接发到无关群聊里。</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="section card">
+      <div class="section-header">
+        <div>
+          <h2>内部测试重点</h2>
+          <p>如果只想反馈最有价值的问题，请优先围绕下面这些点。比起“感觉还行”，我们更想知道它在哪一步卡住、慢了、看不懂或者让你皱眉。</p>
+        </div>
+        <span class="tag">Feedback Checklist</span>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <b>连接成功率</b>
+          <p>同一 Wi-Fi 下，电脑能否顺利打开 Address？不同路由器环境表现如何？</p>
+        </div>
+        <div class="feature">
+          <b>输入体验</b>
+          <p>Access Code 是否好认、好抄？Copy Link 是否明显、可靠？</p>
+        </div>
+        <div class="feature">
+          <b>大文件表现</b>
+          <p>长视频打包和下载是否稳定？手机发热、耗电、空间占用是否可接受？</p>
+        </div>
+        <div class="feature">
+          <b>文件完整性</b>
+          <p>ZIP 解压后文件是否完整？视频能否正常播放？文件名是否保留？</p>
+        </div>
+        <div class="feature">
+          <b>报告准确性</b>
+          <p>Manifest 和 HTML 报告里的文件名、时长、尺寸、拍摄时间是否正确？</p>
+        </div>
+        <div class="feature">
+          <b>异常提示</b>
+          <p>输错 Access Code、会话过期、断网、iCloud 原片未下载时，提示是否看得懂？</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">EZCopy · Created by BLKero · Internal Test Brief · 2026</p>
+  </main>
+</body>
+</html>
