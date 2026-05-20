@@ -1,11 +1,12 @@
 # EZCopy Open-Source Release Checklist
 
 This checklist prepares EZCopy for a public GitHub repository. Do not push until
-the maintainer confirms the repository name, license, and visibility.
+the maintainer gives the final upload confirmation.
 
 ## Repository State
 
 - Current working branch: `codex/internal-test-iteration`
+- GitHub repository: `https://github.com/blkero/EZcopy.git`
 - Baseline tag: `v0.1.0-internal-test-baseline`
 - Local baseline archive: `backups/EZCopy_v0.1.0-internal-test-baseline_2026-05-19.zip`
 - Local backups are ignored by Git.
@@ -23,16 +24,16 @@ the maintainer confirms the repository name, license, and visibility.
 ## Before First Push
 
 1. Confirm the license.
-2. Confirm the GitHub repository name.
-3. Confirm whether the repository should be public immediately or private first.
+2. Confirm the Git commit author email.
+3. Confirm final push approval.
 4. Confirm whether `assets/app-icon` should be open-sourced as project assets.
 5. Confirm whether the app footer should keep `Created by BLKero`.
-6. Configure Git author name/email if desired before future commits.
+6. Configure GitHub repository topics and security settings after upload.
 
 ## Suggested GitHub Repository Settings
 
-- Repository name: `EZCopy`
-- Visibility: public after final review
+- Repository name: `EZcopy`
+- Visibility: public
 - Default branch: `main`
 - Enable Issues
 - Enable Discussions only if you want public support threads
