@@ -1,15 +1,18 @@
 # EZCopy Open-Source Release Checklist
 
-This checklist prepares EZCopy for a public GitHub repository. Do not push until
-the maintainer gives the final upload confirmation.
+This checklist records the open-source release preparation and first public
+GitHub upload for EZCopy.
 
 ## Repository State
 
-- Current working branch: `codex/internal-test-iteration`
-- GitHub repository: `https://github.com/blkero/EZcopy.git`
+- Current public branch: `main`
+- GitHub repository: `https://github.com/blkero/EZcopy`
+- Git remote: `git@github.com:blkero/EZcopy.git`
+- Uploaded head: `97303ef Record GitHub repository target`
 - Baseline tag: `v0.1.0-internal-test-baseline`
 - Local baseline archive: `backups/EZCopy_v0.1.0-internal-test-baseline_2026-05-19.zip`
 - Local backups are ignored by Git.
+- Public upload date: 2026-05-20
 
 ## Completed Preparation
 
@@ -20,15 +23,18 @@ the maintainer gives the final upload confirmation.
 - Added GitHub issue templates and pull request template.
 - Removed local Apple Developer Team ID from the Xcode project.
 - Updated README for the current ZIP-package workflow.
+- Configured Git author as `blkero <283953870+blkero@users.noreply.github.com>`.
+- Rewrote local commit authors before upload.
+- Uploaded `main` and `v0.1.0-internal-test-baseline`.
 
-## Before First Push
+## Completed First Push
 
-1. Confirm the license.
-2. Confirm the Git commit author email.
-3. Confirm final push approval.
-4. Confirm whether `assets/app-icon` should be open-sourced as project assets.
-5. Confirm whether the app footer should keep `Created by BLKero`.
-6. Configure GitHub repository topics and security settings after upload.
+1. License confirmed as MIT for the first public upload.
+2. Repository confirmed as public.
+3. Repository name confirmed as `EZcopy`.
+4. Git author email confirmed as the GitHub noreply address.
+5. `main` pushed to GitHub.
+6. Baseline tag pushed to GitHub.
 
 ## Suggested GitHub Repository Settings
 
@@ -45,7 +51,7 @@ the maintainer gives the final upload confirmation.
   - `photo-transfer`
   - `creator-tools`
 
-## Suggested First Release
+## First Release Reference
 
 Tag:
 
@@ -61,3 +67,11 @@ Release notes:
 - Supports Chrome / Edge receiver flow.
 - Uses ZIP package download with manifest, report, and optional MD5.
 - Not production-stable; intended for internal testing and contributor review.
+
+## Remaining Repository Tasks
+
+1. Confirm GitHub repository topics.
+2. Decide whether to enable Discussions.
+3. Enable private vulnerability reporting if available.
+4. Create a GitHub Release from `v0.1.0-internal-test-baseline` if a release page is desired.
+5. Continue future changes with regular commits and new version tags.

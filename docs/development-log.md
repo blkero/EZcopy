@@ -269,6 +269,43 @@ Open-source notes:
 - Local `backups/` content remains ignored and should not be pushed.
 - Current branch for post-baseline work: `codex/internal-test-iteration`.
 
+### 14. GitHub Public Upload
+
+Published the project to GitHub as a public repository.
+
+Repository:
+
+- URL: `https://github.com/blkero/EZcopy`
+- Remote: `git@github.com:blkero/EZcopy.git`
+- Default branch prepared for GitHub: `main`
+- Current uploaded head: `97303ef Record GitHub repository target`
+- Uploaded baseline tag: `v0.1.0-internal-test-baseline`
+
+Identity and access:
+
+- Git author name: `blkero`
+- Git author email: `283953870+blkero@users.noreply.github.com`
+- Existing local commits were rewritten before upload so public history uses the GitHub identity.
+- Upload uses the local SSH key configured through `core.sshCommand = ssh -i ~/.ssh/id_ed25519_github`.
+
+Open-source package included:
+
+- `README.md`
+- `LICENSE`
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- GitHub issue templates
+- GitHub pull request template
+- Open-source release checklist
+
+Post-upload notes:
+
+- The repository is public.
+- The `main` branch is tracking `origin/main`.
+- The baseline tag is available on GitHub for version rollback.
+- Future development can continue through normal commits and tags.
+
 ## Current Build Status
 
 Current build has been compiled and installed to the connected iPhone multiple times through `xcodebuild` and `xcrun devicectl`.
@@ -286,6 +323,7 @@ Core MVP status:
 - Short Access Code: implemented
 - Internal test intro page: implemented
 - Baseline archive and Git version point: created
+- Public GitHub repository: published
 
 ## Known Limitations
 
