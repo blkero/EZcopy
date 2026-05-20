@@ -81,8 +81,7 @@ struct ContentView: View {
                 .padding(.vertical, 16)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle("EZCopy")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 viewModel.requestPhotoLibraryAccess()
                 transferServer.refreshCacheUsage()
@@ -192,6 +191,10 @@ private struct ReceiverPanel: View {
                 MetricRow(title: "Cache", value: cacheUsage)
             }
 
+            if state.url != nil {
+                ForegroundRunNote()
+            }
+
             HStack(spacing: 12) {
                 Button(action: onStart) {
                     Label("Start Receiver", systemImage: "wifi")
@@ -230,6 +233,30 @@ private struct ReceiverPanel: View {
         formatter.timeStyle = .short
         return formatter
     }()
+}
+
+private struct ForegroundRunNote: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "iphone.radiowaves.left.and.right")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(AppTheme.teal)
+                .frame(width: 24, height: 24)
+
+            Text("Keep EZCopy open in the foreground while the browser connects and downloads.")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(AppTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(AppTheme.teal.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppTheme.teal.opacity(0.18), lineWidth: 1)
+        )
+    }
 }
 
 private struct AccessCodeRow: View {

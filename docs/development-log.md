@@ -247,6 +247,28 @@ Versioning decision:
 - The local archive under `backups/` is ignored by Git and is only for local recovery.
 - Git history is the preferred source for later GitHub open-source version history.
 
+### 13. Open-Source Preparation
+
+Prepared the repository for a future public GitHub release.
+
+Changes:
+
+- Added `LICENSE` with an MIT license draft.
+- Added `CHANGELOG.md`.
+- Added `CONTRIBUTING.md`.
+- Added `SECURITY.md`.
+- Added GitHub issue templates and pull request template.
+- Added `docs/open-source-release-checklist.md`.
+- Rewrote `README.md` for GitHub visitors.
+- Removed the local Apple Developer Team ID from the Xcode project.
+
+Open-source notes:
+
+- The license should be confirmed before publishing.
+- Device builds require each contributor to select their own Apple signing team.
+- Local `backups/` content remains ignored and should not be pushed.
+- Current branch for post-baseline work: `codex/internal-test-iteration`.
+
 ## Current Build Status
 
 Current build has been compiled and installed to the connected iPhone multiple times through `xcodebuild` and `xcrun devicectl`.
